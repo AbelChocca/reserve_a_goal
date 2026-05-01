@@ -2,7 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { SafeUser } from './user.types';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as argon2 from 'argon2';
+import { hash } from 'argon2';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class UserService {
       throw new ConflictException('Email already exists.');
     }
 
-    const passwordHash = await argon2.hash(dto.password);
+    const passwordHash = await hash(dto.password);
 
     const user = await this.prisma.user.create({
       data: {
@@ -29,6 +29,16 @@ export class UserService {
     });
 
     return this.toSafeUser(user);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    if (!user) return null;
+
+    return user;
   }
 
   private toSafeUser(user: User): SafeUser {
