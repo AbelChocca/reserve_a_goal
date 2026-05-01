@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+//
+// ENUMS
+//
+enum UserRole {
+  USER 
+  ADMIN_LOCAL
+  SUPER_ADMIN
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+// USER
+model User {
+  id String @id @default(cuid())
+
+  email String @unique
+  name String
+  passwordHash String
+  role UserRole @default(USER)
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updateAt DateTime @updatedAt
+
+  bookings Booking[]
+  locations Location[]
+}
+
+
+// LOCATION
+model Location {
+  id String @id @default(cuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  spaces Space[]
+}
+
+// SPACE
+model Space {
+  id String @id @default(cuid())
+  name String
+
+  localId String
+  location Location @relation(fields: [localId], references: [id])
+
+  slotRules SlotRule[]
+  slots Slot[]
+}
+
+// SLOTRULE
+model SlotRule {
+  id String @id @default(cuid())
+
+  spaceId String
+  space Space @relation(fields: [spaceId], references: [id])
+
+  dayOfWeek DayOfWeek
+
+  startTime String
+  endTime String
+
+  slotMinutes Int
+
+  isActive Boolean @default(true)
+}
+
+// SLOT
+model Slot {
+  id String @id @default(cuid())
+  
+  spaceId String
+  space Space @relation(fields: [spaceId], references: [id])
+
+  date DateTime
+  startTime DateTime
+  endtime DateTime
+
+  isBooked Boolean @default(false)
+
+  bookingId String?
+  booking Booking? 
+
+  createAt DateTime @default(now())
+}
+
+// BOOKING
+model Booking {
+  id String @id @default(cuid())
+
+  slotId String @unique
+  slot Slot @relation(fields: [slotId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  status BookingStatus @default(CONFIRMED)
+
+  createdAt DateTime @default(now())
+}
