@@ -1,0 +1,23 @@
+FROM node:20-alpine
+
+# Instalar pnpm globalmente
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copiamos solo deps primero (mejor cache)
+COPY package.json pnpm-lock.yaml ./
+
+# Instalar dependencias
+RUN pnpm install
+
+# Copiar el resto del proyecto
+COPY . .
+
+# Generar prisma client
+RUN pnpm prisma generate
+
+EXPOSE 3000
+
+# Modo desarrollo con reload
+CMD ["pnpm", "run", "start:dev"]
