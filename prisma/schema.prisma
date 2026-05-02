@@ -51,12 +51,11 @@ model Location {
   id String @id @default(cuid())
 
   name String
+  city String?
+  address String?
 
   userId String
   user User @relation(fields: [userId], references: [id])
-
-  city String?
-  address String?
 
   spaces Space[]
 
