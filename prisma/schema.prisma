@@ -14,12 +14,6 @@ enum UserRole {
   SUPER_ADMIN
 }
 
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-}
-
 enum DayOfWeek {
   MONDAY
   TUESDAY
@@ -61,7 +55,6 @@ model Location {
   userId String
   user User @relation(fields: [userId], references: [id])
 
-  country String?
   city String?
   address String?
 
@@ -80,7 +73,7 @@ model Space {
   location Location @relation(fields: [localId], references: [id])
 
   slotRules SlotRule[]
-  slots Slot[]
+  bookings Booking[]
 }
 
 // SLOTRULE
@@ -98,31 +91,16 @@ model SlotRule {
   slotMinutes Int
 
   isActive Boolean @default(true)
-}
 
-// SLOT
-model Slot {
-  id String @id @default(cuid())
-  
-  spaceId String
-  space Space @relation(fields: [spaceId], references: [id])
-
-  date DateTime
-  startTime DateTime
-  endtime DateTime
-
-  isBooked Boolean @default(false)
-
-  bookingId String?
-  booking Booking? 
+  @@unique([spaceId, dayOfWeek])
 }
 
 // BOOKING
 model Booking {
   id String @id @default(cuid())
 
-  slotId String @unique
-  slot Slot @relation(fields: [slotId], references: [id])
+  spaceId String
+  space Space @relation(fields: [spaceId], references: [id])
 
   userId String
   user User @relation(fields: [userId], references: [id])
