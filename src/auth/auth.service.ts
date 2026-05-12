@@ -4,6 +4,7 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
 import { LoginUserDto } from './dto/login.dto';
 import * as argon2 from 'argon2';
+import { JwtPayload } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,11 @@ export class AuthService {
   async register(dto: CreateUserDto) {
     const user = await this.userService.createUser(dto);
 
-    return this.generateToken(user.id, user.email);
+    return this.generateTokens({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   async login(dto: LoginUserDto) {
@@ -31,15 +36,37 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    return this.generateToken(user.id, user.email);
+    return this.generateTokens({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
-  private generateToken(userId: string, email: string) {
+  refresh(refresh_token?: string) {
+    if (!refresh_token) {
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(refresh_token);
+
+      return this.generateAccessToken(payload);
+    } catch {
+      throw new Error('Invalid or expired token');
+    }
+  }
+
+  private generateAccessToken(payload: object) {
     return {
-      access_token: this.jwtService.sign({
-        sub: userId,
-        email,
-      }),
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
+    };
+  }
+
+  private generateTokens(payload: object) {
+    return {
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 }
