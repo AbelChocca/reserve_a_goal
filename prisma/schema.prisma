@@ -31,6 +31,21 @@ enum BookingStatus {
   CANCELLED
 }
 
+model Image {
+  id String @id @default(cuid())
+  url String
+  key String
+
+  locationImage LocationImage[]
+  userImage UserImage?
+  spaceImage SpaceImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("image")
+}
+
 // USER
 model User {
   id String @id @default(cuid())
@@ -43,10 +58,28 @@ model User {
   createdAt DateTime @default(now()) @db.Timestamptz
   updateAt DateTime @updatedAt
 
+  userImage UserImage?
   bookings Booking[]
   locations Location[]
+
+  @@map("user")
 }
 
+model UserImage {
+  id String @id @default(cuid())
+
+  userId String @unique
+  imageId String @unique
+
+  isPrimary Boolean @default(false)
+  updateAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@map("user_image")
+}
 
 // LOCATION
 model Location {
@@ -59,22 +92,63 @@ model Location {
   userId String
   user User @relation(fields: [userId], references: [id])
 
+  locationImage LocationImage[]
+
   spaces Space[]
 
   createAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("location")
+}
+
+// LOCATION IMAGE
+model LocationImage {
+  id String @id @default(cuid())
+
+  locationId String
+  imageId String
+
+  isPrimary Boolean @default(false)
+  updateAt DateTime @updatedAt
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, imageId])
+  @@map("location_image")
 }
 
 // SPACE
 model Space {
   id String @id @default(cuid())
   name String
+  description String?
 
-  localId String
-  location Location @relation(fields: [localId], references: [id])
+  locationId String
+  location Location @relation(fields: [locationId], references: [id])
 
+  spaceImages SpaceImage[]
   slotRules SlotRule[]
   bookings Booking[]
+
+  @@map("space")
+}
+
+model SpaceImage {
+  id String @id @default(cuid())
+  
+  spaceId String
+  imageId String
+
+  isPrimary Boolean @default(false)
+  updateAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, imageId])
+  @@map("space_image")
 }
 
 // SLOTRULE
@@ -94,6 +168,7 @@ model SlotRule {
   isActive Boolean @default(true)
 
   @@unique([spaceId, dayOfWeek])
+  @@map("slot_rule")
 }
 
 // BOOKING
@@ -106,7 +181,11 @@ model Booking {
   userId String
   user User @relation(fields: [userId], references: [id])
 
+  startTime DateTime
+  endTime DateTime
   status BookingStatus @default(CONFIRMED)
 
   createdAt DateTime @default(now())
+
+  @@map("booking")
 }
