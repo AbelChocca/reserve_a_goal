@@ -6,11 +6,15 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { PaginationDto } from 'src/shared/pagination/pagination.dto';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { LocationService } from './location.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/auth.decorators';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Locations')
 @Controller('locations')
@@ -26,6 +30,8 @@ export class LocationController {
     );
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN_LOCAL, UserRole.SUPER_ADMIN)
   @Post(':userId')
   @HttpCode(201)
   @ApiBody({ type: CreateLocationDto })

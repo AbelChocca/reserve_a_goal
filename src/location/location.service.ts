@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { PaginationService } from 'src/shared/pagination/pagination.service';
+import { PaginationService } from 'src/common/pagination/pagination.service';
 import { Location } from '@prisma/client';
 import type { PublicLocation } from './location.types';
 
