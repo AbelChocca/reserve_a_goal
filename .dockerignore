@@ -7,3 +7,4 @@ docker-compose.dev.yml
 npm-debug.log
 .env
 .env.*
+.vscode
